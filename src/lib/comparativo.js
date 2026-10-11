@@ -34,7 +34,11 @@ export function montarComparativo(itens, propostas, respostas) {
   // preço por convite/item
   const precos = {}
   const obs = {}
+  const eras = {} // valor original quando o fornecedor corrigiu (registrado, não editável)
   for (const r of respostas) {
+    if (r.corrigido_em) {
+      ;(eras[r.convite_id] ||= {})[r.item_id] = r.disponivel_original === false ? 'não tinha' : Number(r.preco_original)
+    }
     if (r.observacao) (obs[r.convite_id] ||= {})[r.item_id] = r.observacao
     if (r.disponivel && r.preco_unitario != null) {
       ;(precos[r.convite_id] ||= {})[r.item_id] = Number(r.preco_unitario)
@@ -64,7 +68,7 @@ export function montarComparativo(itens, propostas, respostas) {
       const valores = {}
       for (const c of colunas) {
         const unit = precos[c.convite_id]?.[item.id]
-        valores[c.convite_id] = unit == null ? null : { unit, sub: unit * qtd, obs: obs[c.convite_id]?.[item.id] }
+        valores[c.convite_id] = unit == null ? null : { unit, sub: unit * qtd, obs: obs[c.convite_id]?.[item.id], era: eras[c.convite_id]?.[item.id] }
       }
       const validos = colunas.filter((c) => valores[c.convite_id])
       const menor = validos.length ? Math.min(...validos.map((c) => valores[c.convite_id].unit)) : null

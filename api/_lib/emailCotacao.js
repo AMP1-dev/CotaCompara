@@ -15,14 +15,17 @@ export const numeroCotacao = (n) => '#' + String(n || 0).padStart(4, '0')
 
 const MAX_ITENS_EMAIL = 15
 
-export function montarEmailCotacao({ empresa, cotacao, itens, fornecedor, link, reenvio = false }) {
+export function montarEmailCotacao({ empresa, cotacao, itens, fornecedor, link, reenvio = false, tipo = 'convite' }) {
+  const correcao = tipo === 'correcao'
   const prazo = dataHora(cotacao.prazo_resposta)
   const local = [empresa.cidade, empresa.uf].filter(Boolean).join(' / ')
   const visiveis = itens.slice(0, MAX_ITENS_EMAIL)
   const resto = itens.length - visiveis.length
   const saudacao = fornecedor.contato || fornecedor.nome
 
-  const assunto = `${reenvio ? 'Lembrete: ' : ''}Pedido de cotação ${numeroCotacao(cotacao.numero)} — ${empresa.nome}`
+  const assunto = correcao
+    ? `Correção liberada: cotação ${numeroCotacao(cotacao.numero)} — ${empresa.nome}`
+    : `${reenvio ? 'Lembrete: ' : ''}Pedido de cotação ${numeroCotacao(cotacao.numero)} — ${empresa.nome}`
 
   const linhasItens = visiveis.map((i, n) => `
       <tr>
@@ -45,8 +48,10 @@ export function montarEmailCotacao({ empresa, cotacao, itens, fornecedor, link, 
         <p style="margin:4px 0 0;font-size:13px;color:#888888;">${[empresa.cnpj && 'CNPJ ' + esc(empresa.cnpj), esc(local), esc(empresa.telefone)].filter(Boolean).join(' · ')}</p>
       </td></tr>
       <tr><td style="padding:18px 28px 0;">
-        <p style="margin:0 0 14px;font-size:15px;line-height:1.6;color:#444444;">Olá, ${esc(saudacao)}!${reenvio ? ' Passando para lembrar do pedido abaixo.' : ''}
-          Gostaríamos de receber seu preço para os itens abaixo. É rápido: abra o link, digite o preço unitário e envie. <strong>Não precisa de cadastro.</strong></p>
+        <p style="margin:0 0 14px;font-size:15px;line-height:1.6;color:#444444;">Olá, ${esc(saudacao)}!
+          ${correcao
+            ? `A <strong>${esc(empresa.nome)}</strong> liberou a <strong>correção da sua proposta</strong>. Abra o link, ajuste os valores que precisar e envie. Os valores enviados antes ficam registrados.`
+            : `${reenvio ? 'Passando para lembrar do pedido abaixo. ' : ''}Gostaríamos de receber seu preço para os itens abaixo. É rápido: abra o link, digite o preço unitário e envie. <strong>Não precisa de cadastro.</strong>`}</p>
         <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:#F7F7F7;border-radius:8px;">
           <tr><td style="padding:12px 14px;font-size:14px;color:#333333;">
             <strong>${esc(cotacao.titulo)}</strong> <span style="color:#999999;font-family:monospace;">${numeroCotacao(cotacao.numero)}</span><br>
@@ -57,7 +62,7 @@ export function montarEmailCotacao({ empresa, cotacao, itens, fornecedor, link, 
       </td></tr>
       <tr><td align="center" style="padding:24px 28px 8px;">
         <table role="presentation" cellpadding="0" cellspacing="0"><tr><td style="border-radius:8px;background:#3483FA;">
-          <a href="${esc(link)}" style="display:inline-block;padding:15px 34px;font-size:16px;font-weight:bold;color:#FFFFFF;text-decoration:none;border-radius:8px;">Responder cotação</a>
+          <a href="${esc(link)}" style="display:inline-block;padding:15px 34px;font-size:16px;font-weight:bold;color:#FFFFFF;text-decoration:none;border-radius:8px;">${correcao ? 'Corrigir proposta' : 'Responder cotação'}</a>
         </td></tr></table>
       </td></tr>
       <tr><td style="padding:16px 28px 0;">
@@ -86,7 +91,9 @@ export function montarEmailCotacao({ empresa, cotacao, itens, fornecedor, link, 
   const texto = [
     `Pedido de cotação de ${empresa.nome}${empresa.cnpj ? ' (CNPJ ' + empresa.cnpj + ')' : ''}`,
     '',
-    `Olá, ${saudacao}!${reenvio ? ' Passando para lembrar do pedido abaixo.' : ''}`,
+    correcao
+      ? `Olá, ${saudacao}! ${empresa.nome} liberou a correção da sua proposta. Os valores enviados antes ficam registrados.`
+      : `Olá, ${saudacao}!${reenvio ? ' Passando para lembrar do pedido abaixo.' : ''}`,
     `Cotação: ${cotacao.titulo} ${numeroCotacao(cotacao.numero)}`,
     prazo ? `Responder até: ${prazo}` : null,
     '',

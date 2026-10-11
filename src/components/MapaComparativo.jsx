@@ -23,6 +23,7 @@ export default function MapaComparativo({ comp, onAbrir, impressao = false }) {
                 {onAbrir && !impressao
                   ? <button className="mapa-link" onClick={() => onAbrir(c.convite_id)}>{c.fornecedor_nome}</button>
                   : c.fornecedor_nome}
+                {c.revisao > 0 && <div className="mapa-era" style={{ fontWeight: 400 }}>proposta corrigida</div>}
                 {impressao ? (
                   c.vencedor ? <span className="mapa-tag-imp venc"> ★ vencedor</span>
                     : !c.completa ? <span className="mapa-tag-imp"> ({c.itens_cotados}/{c.total_itens})</span> : null
@@ -56,11 +57,17 @@ export default function MapaComparativo({ comp, onAbrir, impressao = false }) {
                         <span className="mapa-linha">
                           <span className="mapa-unit">{formatarMoeda(v.unit)}</span>
                           <span className="mapa-sub">{formatarMoeda(v.sub)}</span>
+                          {v.era != null && <span className="mapa-era">era {typeof v.era === 'number' ? formatarMoeda(v.era) : v.era}</span>}
                         </span>
                       ) : (
                         <>
                           <div className="mapa-unit">{formatarMoeda(v.unit)}</div>
                           <div className="mapa-sub">{formatarMoeda(v.sub)}</div>
+                          {v.era != null && (
+                            <div className="mapa-era" title="Valor da proposta original (registrado, não editável)">
+                              era {typeof v.era === 'number' ? formatarMoeda(v.era) : v.era}
+                            </div>
+                          )}
                           {v.obs && <div className="mapa-obs" title={v.obs}>{v.obs}</div>}
                         </>
                       )

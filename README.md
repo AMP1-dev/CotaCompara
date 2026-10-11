@@ -97,6 +97,18 @@ torna `suporte@amp.ia.br` administrador — troque o e-mail se precisar.
 - Erros de envio aparecem em vermelho no fornecedor.
 - O envio só funciona no site publicado (no `npm run dev` local não há a função /api).
 
+## Fase 4.1 — proposta travada e correção liberada pelo comprador
+
+**Banco:** rodar `supabase/05_correcao_proposta.sql`.
+
+- Depois de enviar, o fornecedor vê "Proposta enviada! Boa sorte! 🍀" e **não consegue reenviar** sozinho
+  (travado também no banco: erro JA_RESPONDIDO).
+- O comprador tem o botão **Liberar correção** no fornecedor: libera e já envia o e-mail
+  "Correção liberada" com o link. Pode cancelar antes do fornecedor responder.
+- Na correção, o fornecedor vê ao lado de cada campo o valor que já tinha enviado.
+- O preço anterior fica registrado (`preco_original`, não editável — nem o comprador altera).
+  No mapa, no "Ver preços" e no relatório aparece "↻ era R$ X" e o selo "↻ corrigida".
+
 ---
 
 ## 1. Supabase (projeto compartilhado "Fixos")

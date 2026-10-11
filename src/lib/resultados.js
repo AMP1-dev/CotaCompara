@@ -10,7 +10,7 @@ export async function buscarResultados(cotacaoIds) {
   if (!convites.length) return { propostas: [], respostas: [] }
   const { data: respostas } = await supabase
     .from('respostas_itens')
-    .select('convite_id, item_id, preco_unitario, disponivel, observacao')
+    .select('convite_id, item_id, preco_unitario, disponivel, observacao, preco_original, disponivel_original, corrigido_em')
     .in('convite_id', convites)
   return { propostas: propostas || [], respostas: respostas || [] }
 }

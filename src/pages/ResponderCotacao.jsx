@@ -12,6 +12,7 @@ const MENSAGENS = {
   COTACAO_FECHADA: 'Esta cotação foi encerrada pelo comprador e não recebe mais preços.',
   PRAZO_ENCERRADO: 'O prazo para responder esta cotação terminou.',
   SEM_ITENS: 'Informe o preço de pelo menos um item.',
+  JA_RESPONDIDO: 'Sua proposta já foi enviada. Para alterar algum valor, fale com quem está cotando: só ele pode liberar uma correção.',
 }
 
 const traduzir = (err) => {
@@ -60,6 +61,9 @@ export default function ResponderCotacao() {
     data.itens.forEach((i) => {
       inicial[i.id] = {
         preco: precoParaTexto(i.preco_unitario),
+        enviado: i.preco_unitario,                 // valor já enviado (referência na correção)
+        semItemAntes: i.disponivel === false,
+        original: i.preco_original,                // 1ª proposta, se já houve correção
         semItem: i.disponivel === false,
         obs: '',
       }
@@ -167,23 +171,25 @@ export default function ResponderCotacao() {
       <Casca>
         <div className="card resp-aviso">
           <div className="resp-icone ok">✓</div>
-          <h2>Cotação enviada!</h2>
+          <h2>{dados.pode_corrigir ? 'Correção enviada!' : 'Proposta enviada!'} Boa sorte! 🍀</h2>
           <p>
-            Seus preços foram entregues para <strong>{empresa.nome}</strong>.
-            {totais.total > 0 && <> Total informado: <strong>{formatarMoeda(totais.total)}</strong>.</>}
+            Sua proposta chegou para <strong>{empresa.nome}</strong>
+            {totais.total > 0 && <>, no total de <strong>{formatarMoeda(totais.total)}</strong></>}.
+            Agora é com eles: assim que compararem as propostas, devem entrar em contato.
           </p>
-          <p className="texto-suave">Você já pode fechar esta página.</p>
-          {dados.pode_responder && (
-            <button className="btn btn-secundario" onClick={() => { setEnviado(false); carregar() }}>
-              Corrigir minha resposta
-            </button>
-          )}
+          <p className="texto-suave" style={{ fontSize: 14 }}>
+            Obrigado pela atenção e pela agilidade. Precisa alterar algum valor? Fale com {empresa.nome}
+            {empresa.telefone ? ` (${empresa.telefone})` : ''}: só eles podem liberar uma correção.
+          </p>
+          <p className="texto-suave" style={{ fontSize: 13, marginBottom: 0 }}>Você já pode fechar esta página.</p>
         </div>
       </Casca>
     )
   }
 
   const somenteLeitura = !dados.pode_responder
+  const corrigindo = dados.pode_responder && dados.ja_respondido && dados.pode_corrigir
+  const travadaPorResposta = somenteLeitura && dados.ja_respondido && dados.cotacao_aberta
   const motivoFechada =
     dados.status_cotacao === 'rascunho' ? 'Esta cotação ainda não foi liberada pelo comprador. Tente novamente mais tarde.'
     : dados.status_cotacao === 'enviada' ? MENSAGENS.PRAZO_ENCERRADO
@@ -220,10 +226,19 @@ export default function ResponderCotacao() {
         )}
       </div>
 
-      {somenteLeitura && <div className="alerta alerta-erro">{motivoFechada}</div>}
-      {!somenteLeitura && dados.ja_respondido && (
+      {travadaPorResposta ? (
         <div className="alerta alerta-ok">
-          Você já enviou preços para esta cotação. Pode corrigir e enviar de novo até o prazo — vale a última versão.
+          ✓ Sua proposta foi enviada em <strong>{formatarData(dados.respondido_em)}</strong>. Boa sorte! 🍀
+          <div style={{ marginTop: 4, fontSize: 13 }}>
+            Para alterar algum valor, fale com {empresa.nome}{empresa.telefone ? ` (${empresa.telefone})` : ''}:
+            só eles podem liberar uma correção.
+          </div>
+        </div>
+      ) : somenteLeitura && <div className="alerta alerta-erro">{motivoFechada}</div>}
+      {corrigindo && (
+        <div className="alerta alerta-info">
+          <strong>{empresa.nome}</strong> liberou a correção da sua proposta. Ajuste o que precisar e envie.
+          Os valores enviados antes ficam registrados para o comprador.
         </div>
       )}
 
@@ -261,6 +276,12 @@ export default function ResponderCotacao() {
                   value={r.semItem ? '' : r.preco} disabled={somenteLeitura || r.semItem}
                   onChange={(e) => alterar(i.id, 'preco', e.target.value)}
                   onBlur={() => formatarAoSair(i.id)} />
+                {corrigindo && (
+                  <div className="resp-antes" title="Valor já enviado — fica registrado">
+                    enviado: {r.semItemAntes ? 'não tinha' : formatarMoeda(r.enviado)}
+                    {r.original != null && Number(r.original) !== Number(r.enviado) && <> · 1ª: {formatarMoeda(r.original)}</>}
+                  </div>
+                )}
               </div>
               <div className="resp-sub num">
                 <span className="rot">Subtotal</span>{sub != null ? formatarMoeda(sub) : '—'}
@@ -313,7 +334,7 @@ export default function ResponderCotacao() {
               <div className="resp-total">{formatarMoeda(totais.total)}</div>
             </div>
             <button className="btn btn-primario" onClick={enviar} disabled={enviando}>
-              {enviando ? 'Enviando...' : dados.ja_respondido ? 'Atualizar cotação' : 'Enviar cotação'}
+              {enviando ? 'Enviando...' : corrigindo ? 'Enviar correção' : 'Enviar proposta'}
             </button>
           </div>
           {erroEnvio && <div className="alerta alerta-erro" style={{ margin: '10px auto 0', maxWidth: 820 }}>{erroEnvio}</div>}

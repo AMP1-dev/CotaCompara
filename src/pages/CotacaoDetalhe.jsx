@@ -42,7 +42,7 @@ export default function CotacaoDetalhe() {
   const carregarConvites = useCallback(async () => {
     const { data } = await supabase
       .from('convites')
-      .select('id, token, status, envios, erro_envio, enviado_em, aberto_em, respondido_em, prazo_entrega_dias, condicao_pagamento, frete, observacao, fornecedor:fornecedores(id, nome, contato, email, whatsapp)')
+      .select('id, token, status, envios, erro_envio, pode_corrigir, revisao, correcao_liberada_em, enviado_em, aberto_em, respondido_em, prazo_entrega_dias, condicao_pagamento, frete, observacao, fornecedor:fornecedores(id, nome, contato, email, whatsapp)')
       .eq('cotacao_id', id)
       .order('created_at')
     setConvites(data || [])
@@ -130,7 +130,7 @@ export default function CotacaoDetalhe() {
   }
 
   /* ---------- envio por e-mail (função /api/enviar-convites na Vercel) ---------- */
-  const enviarEmails = async (conviteIds = null, reenvio = false) => {
+  const enviarEmails = async (conviteIds = null, reenvio = false, tipo = 'convite') => {
     setErro(''); setAviso('')
     setEnviando(true)
     try {
@@ -138,7 +138,7 @@ export default function CotacaoDetalhe() {
       const r = await fetch('/api/enviar-convites', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${session?.access_token}` },
-        body: JSON.stringify({ cotacao_id: id, convite_ids: conviteIds, reenvio }),
+        body: JSON.stringify({ cotacao_id: id, convite_ids: conviteIds, reenvio, tipo }),
       })
       const corpo = await r.json().catch(() => ({}))
       if (!r.ok) setErro(corpo.erro || `Falha no envio (${r.status}).`)
@@ -148,6 +148,26 @@ export default function CotacaoDetalhe() {
       setErro('Não foi possível enviar agora. Se estiver testando no computador (localhost), o envio só funciona no site publicado.')
     }
     setEnviando(false)
+    carregarConvites()
+  }
+
+  // Só o comprador libera o fornecedor a enviar uma nova proposta.
+  // O preço anterior fica guardado no banco (preco_original), sem edição.
+  const liberarCorrecao = async (c) => {
+    if (!window.confirm(
+      `Liberar ${c.fornecedor?.nome} para enviar uma nova proposta?\n\n` +
+      'Ele recebe o link por e-mail. Os preços atuais ficam registrados como originais, ' +
+      'e os itens alterados aparecem marcados no mapa.')) return
+    setErro(''); setAviso('')
+    const { error } = await supabase.from('convites')
+      .update({ pode_corrigir: true, correcao_liberada_em: new Date().toISOString() }).eq('id', c.id)
+    if (error) return setErro(mensagemErro(error))
+    await enviarEmails([c.id], true, 'correcao')
+  }
+
+  const cancelarCorrecao = async (c) => {
+    if (!window.confirm(`Cancelar a correção liberada para ${c.fornecedor?.nome}? A proposta atual fica valendo.`)) return
+    await supabase.from('convites').update({ pode_corrigir: false }).eq('id', c.id)
     carregarConvites()
   }
 
@@ -215,7 +235,7 @@ export default function CotacaoDetalhe() {
     setPrecos([])
     const { data } = await supabase
       .from('respostas_itens')
-      .select('item_id, preco_unitario, disponivel, observacao')
+      .select('item_id, preco_unitario, disponivel, observacao, preco_original, disponivel_original, corrigido_em')
       .eq('convite_id', c.id)
     setPrecos(data || [])
   }
@@ -223,7 +243,9 @@ export default function CotacaoDetalhe() {
   const linhasPrecos = itens.map((i) => {
     const r = precos.find((p) => p.item_id === i.id)
     const unit = r?.disponivel && r.preco_unitario != null ? Number(r.preco_unitario) : null
-    return { ...i, unit, sub: unit != null ? unit * Number(i.quantidade) : null, obsForn: r?.observacao }
+    const corrigido = !!r?.corrigido_em
+    const era = corrigido ? (r.disponivel_original === false ? 'não tinha' : formatarMoeda(r.preco_original)) : null
+    return { ...i, unit, sub: unit != null ? unit * Number(i.quantidade) : null, obsForn: r?.observacao, era }
   })
   const totalPrecos = linhasPrecos.reduce((t, l) => t + (l.sub || 0), 0) + Number(verConvite?.frete || 0)
 
@@ -362,18 +384,27 @@ export default function CotacaoDetalhe() {
                       <span>{c.fornecedor?.email}</span>
                       {quando && <span>{quando}</span>}
                       {c.envios > 1 && <span>{c.envios} envios</span>}
+                      {c.pode_corrigir && c.correcao_liberada_em && <span>correção liberada {formatarData(c.correcao_liberada_em)}</span>}
                       {c.erro_envio && <span style={{ color: 'var(--vermelho)' }}>erro no e-mail: {c.erro_envio}</span>}
                     </div>
                   </div>
                   {copiado === c.id && <span className="copiado">Link copiado!</span>}
-                  <Badge cor={sc.cor}>{sc.rotulo}</Badge>
+                  {c.pode_corrigir ? <Badge cor="laranja">correção liberada</Badge> : <Badge cor={sc.cor}>{sc.rotulo}</Badge>}
+                  {c.revisao > 0 && <span className="badge badge-correcao" title="Fornecedor corrigiu a proposta">↻ corrigida{c.revisao > 1 ? ` ${c.revisao}x` : ''}</span>}
                   <div className="acoes">
                     {c.status === 'respondido' && (
                       <button className="btn btn-secundario btn-pequeno" onClick={() => abrirPrecos(c)}>Ver preços</button>
                     )}
+                    {aberta && c.status === 'respondido' && !c.pode_corrigir && (
+                      <button className="btn btn-texto btn-pequeno" onClick={() => liberarCorrecao(c)} disabled={enviando}
+                        title="Permite que o fornecedor envie uma nova proposta">Liberar correção</button>
+                    )}
+                    {c.pode_corrigir && (
+                      <button className="btn btn-texto btn-pequeno" onClick={() => cancelarCorrecao(c)}>Cancelar correção</button>
+                    )}
                     {aberta && (
                       <>
-                        {c.status !== 'respondido' && (
+                        {(c.status !== 'respondido' || c.pode_corrigir) && (
                           <button className="btn-icone" title={c.envios ? 'Reenviar e-mail' : 'Enviar e-mail'}
                             onClick={() => reenviar(c)} disabled={enviando}><IconeEmail /></button>
                         )}
@@ -448,7 +479,10 @@ export default function CotacaoDetalhe() {
                         {l.obsForn && <div style={{ fontSize: 12, color: 'var(--texto-2)' }}>{l.obsForn}</div>}
                       </td>
                       <td className="num">{formatarQtd(l.quantidade)} {l.unidade}</td>
-                      <td className="num">{l.unit != null ? formatarMoeda(l.unit) : <span className="badge badge-vermelho">não tem</span>}</td>
+                      <td className="num">
+                        {l.unit != null ? formatarMoeda(l.unit) : <span className="badge badge-vermelho">não tem</span>}
+                        {l.era && <span className="mapa-era" title="Valor da proposta original (registrado)">era {l.era}</span>}
+                      </td>
                       <td className="num">{l.sub != null ? formatarMoeda(l.sub) : '—'}</td>
                     </tr>
                   ))}

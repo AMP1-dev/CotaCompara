@@ -168,7 +168,7 @@ export default function CotacaoImprimir() {
             <MapaComparativo comp={comp} impressao />
             <div className="imp-legenda">
               Em cada célula: preço unitário e subtotal (unitário × quantidade). Verde = menor preço do item.
-              Vencedor = menor total entre quem cotou todos os itens.
+              Vencedor = menor total entre quem cotou todos os itens. "↻ era" = valor da proposta original antes da correção liberada pelo comprador.
             </div>
           </>
         ) : (

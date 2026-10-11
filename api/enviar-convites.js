@@ -31,7 +31,7 @@ export default async function handler(req, res) {
 
   let corpo = req.body
   if (typeof corpo === 'string') { try { corpo = JSON.parse(corpo) } catch { corpo = {} } }
-  const { cotacao_id, convite_ids, reenvio = false } = corpo || {}
+  const { cotacao_id, convite_ids, reenvio = false, tipo = 'convite' } = corpo || {}
   if (!cotacao_id) return responder(res, 400, { erro: 'cotacao_id é obrigatório.' })
 
   // cliente "como o usuário": todas as consultas passam pelo RLS
@@ -62,14 +62,17 @@ export default async function handler(req, res) {
 
   let consulta = sb
     .from('convites')
-    .select('id, token, status, envios, fornecedor:fornecedores(nome, contato, email)')
+    .select('id, token, status, envios, pode_corrigir, fornecedor:fornecedores(nome, contato, email)')
     .eq('cotacao_id', cotacao_id)
   if (Array.isArray(convite_ids) && convite_ids.length) consulta = consulta.in('id', convite_ids)
   else consulta = consulta.eq('status', 'pendente')
   const { data: convites, error: convErr } = await consulta
   if (convErr) return responder(res, 500, { erro: 'Erro ao ler fornecedores: ' + convErr.message })
 
-  const alvo = (convites || []).filter((c) => c.fornecedor?.email).slice(0, MAX_POR_ENVIO)
+  // quem já respondeu só recebe de novo se o comprador liberou correção
+  const alvo = (convites || [])
+    .filter((c) => c.fornecedor?.email && (c.status !== 'respondido' || c.pode_corrigir))
+    .slice(0, MAX_POR_ENVIO)
   if (!alvo.length) return responder(res, 200, { enviados: 0, erros: [], aviso: 'Nenhum fornecedor pendente de envio.' })
 
   const itens = [...(cotacao.cotacao_itens || [])].sort((a, b) => (a.ordem ?? 0) - (b.ordem ?? 0))
@@ -80,6 +83,7 @@ export default async function handler(req, res) {
       empresa, cotacao, itens, fornecedor: c.fornecedor,
       link: `${APP_URL}/r/${c.token}`,
       reenvio: reenvio || c.envios > 0,
+      tipo: c.pode_corrigir ? 'correcao' : tipo,
     })
     return {
       from: EMAIL_FROM,
@@ -93,6 +97,8 @@ export default async function handler(req, res) {
   })
 
   // Um único pedido ao Resend (o plano grátis limita a 2 requisições por segundo)
+  console.log(`[enviar-convites] usuario=${usuario.email} cotacao=${numeroCotacao(cotacao.numero)} destinatarios=${alvo.length} tipo=${tipo}`)
+
   let resultado
   try {
     const r = await fetch('https://api.resend.com/emails/batch', {
@@ -103,6 +109,7 @@ export default async function handler(req, res) {
     resultado = await r.json().catch(() => ({}))
     if (!r.ok) {
       const msg = resultado?.message || resultado?.error || `Resend respondeu ${r.status}`
+      console.error(`[enviar-convites] ERRO Resend ${r.status}: ${msg}`)
       await Promise.all(alvo.map((c) => sb.from('convites').update({ erro_envio: String(msg).slice(0, 300) }).eq('id', c.id)))
       return responder(res, 502, { erro: 'Falha no envio: ' + msg })
     }
@@ -110,6 +117,7 @@ export default async function handler(req, res) {
     return responder(res, 502, { erro: 'Não foi possível falar com o serviço de e-mail: ' + e.message })
   }
 
+  console.log(`[enviar-convites] OK ${alvo.length} e-mail(s) aceitos pelo Resend`)
   const agora = new Date().toISOString()
   await Promise.all(alvo.map((c) => sb.from('convites').update({
     status: ['pendente', 'enviado'].includes(c.status) ? 'enviado' : c.status, // não rebaixa "aberto"/"respondido"

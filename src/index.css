@@ -745,3 +745,9 @@ h3 { font-size: 16px; font-weight: 700; }
   .split-logo-mobile { display: block; align-self: stretch; background: var(--amarelo); margin: -40px -24px 28px; padding: 14px 16px; border-radius: 0 0 20px 20px; }
 }
 .stat.cinza { border-top: 3px solid #BDBDBD; }
+
+/* ---------- Correção de proposta ---------- */
+.resp-antes { font-size: 11.5px; color: var(--texto-3); text-align: right; margin-top: 3px; font-family: var(--fonte-tabela); }
+.mapa-era { display: block; font-size: 11px; color: #B84A12; }
+.mapa-era::before { content: '↻ '; }
+.badge-correcao { background: #FFF1E8; color: #B84A12; }
