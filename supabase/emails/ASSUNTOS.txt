@@ -1,0 +1,7 @@
+Cole cada assunto no campo "Subject" do modelo correspondente:
+
+Reset Password (Redefinir senha):
+{{ if eq .Data.app "cotacompara" }}CotaCompara: crie sua nova senha{{ else }}AMP: redefinição de senha{{ end }}
+
+Confirm signup (Confirmar cadastro):
+{{ if eq .Data.app "cotacompara" }}CotaCompara: confirme seu e-mail{{ else }}AMP: confirme seu e-mail{{ end }}

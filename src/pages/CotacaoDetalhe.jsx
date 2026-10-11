@@ -7,7 +7,7 @@ import {
 } from '../lib/format'
 import Badge from '../components/Badge'
 import Modal from '../components/Modal'
-import { IconeEditar, IconeLixo, IconeLink, IconeVoltar, IconeWhats } from '../components/Icones'
+import { IconeEditar, IconeLixo, IconeLink, IconeVoltar, IconeWhats, IconeEmail } from '../components/Icones'
 import MapaComparativo, { ResumoResultado } from '../components/MapaComparativo'
 import { montarComparativo } from '../lib/comparativo'
 import { buscarResultados } from '../lib/resultados'
@@ -24,6 +24,8 @@ export default function CotacaoDetalhe() {
   const [erro, setErro] = useState('')
   const [ocupado, setOcupado] = useState(false)
   const [copiado, setCopiado] = useState(null)
+  const [aviso, setAviso] = useState('')
+  const [enviando, setEnviando] = useState(false)
 
   // modal de adicionar fornecedores
   const [modalForn, setModalForn] = useState(false)
@@ -40,7 +42,7 @@ export default function CotacaoDetalhe() {
   const carregarConvites = useCallback(async () => {
     const { data } = await supabase
       .from('convites')
-      .select('id, token, status, enviado_em, aberto_em, respondido_em, prazo_entrega_dias, condicao_pagamento, frete, observacao, fornecedor:fornecedores(id, nome, contato, email, whatsapp)')
+      .select('id, token, status, envios, erro_envio, enviado_em, aberto_em, respondido_em, prazo_entrega_dias, condicao_pagamento, frete, observacao, fornecedor:fornecedores(id, nome, contato, email, whatsapp)')
       .eq('cotacao_id', id)
       .order('created_at')
     setConvites(data || [])
@@ -84,6 +86,8 @@ export default function CotacaoDetalhe() {
     [itens, resultados]
   )
 
+  const pendentes = convites.filter((c) => c.status === 'pendente' && c.fornecedor?.email).length
+
   if (carregando) return <div className="card">Carregando...</div>
   if (!cotacao) return <div className="card"><div className="alerta alerta-erro">{erro}</div><Link to="/cotacoes">Voltar</Link></div>
 
@@ -109,9 +113,47 @@ export default function CotacaoDetalhe() {
     if (!convites.length) return setErro('Adicione pelo menos um fornecedor antes de liberar.')
     if (cotacao.prazo_resposta && new Date(cotacao.prazo_resposta) < new Date())
       return setErro('O prazo de resposta já passou. Edite a cotação e ajuste o prazo.')
-    mudarStatus('enviada',
-      'Liberar a cotação para respostas?\n\nDepois disso os itens não podem mais ser alterados. ' +
-      'Você poderá copiar o link de cada fornecedor ou enviar pelo WhatsApp.')
+    const comEmail = convites.filter((c) => c.fornecedor?.email).length
+    const ok = window.confirm(
+      'Liberar a cotação para respostas?\n\n' +
+      `Os ${comEmail} fornecedores vão receber o pedido por e-mail agora, com o link para responder.\n` +
+      'Depois disso os itens não podem mais ser alterados.')
+    if (!ok) return
+    ;(async () => {
+      setOcupado(true)
+      const { error } = await supabase.from('cotacoes').update({ status: 'enviada' }).eq('id', id)
+      setOcupado(false)
+      if (error) return setErro(mensagemErro(error))
+      setCotacao((c) => ({ ...c, status: 'enviada' }))
+      await enviarEmails()
+    })()
+  }
+
+  /* ---------- envio por e-mail (função /api/enviar-convites na Vercel) ---------- */
+  const enviarEmails = async (conviteIds = null, reenvio = false) => {
+    setErro(''); setAviso('')
+    setEnviando(true)
+    try {
+      const { data: { session } } = await supabase.auth.getSession()
+      const r = await fetch('/api/enviar-convites', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${session?.access_token}` },
+        body: JSON.stringify({ cotacao_id: id, convite_ids: conviteIds, reenvio }),
+      })
+      const corpo = await r.json().catch(() => ({}))
+      if (!r.ok) setErro(corpo.erro || `Falha no envio (${r.status}).`)
+      else if (!corpo.enviados) setAviso(corpo.aviso || 'Nenhum e-mail para enviar.')
+      else setAviso(`${corpo.enviados} ${corpo.enviados === 1 ? 'e-mail enviado' : 'e-mails enviados'} com sucesso.`)
+    } catch {
+      setErro('Não foi possível enviar agora. Se estiver testando no computador (localhost), o envio só funciona no site publicado.')
+    }
+    setEnviando(false)
+    carregarConvites()
+  }
+
+  const reenviar = (c) => {
+    if (!window.confirm(`Enviar o e-mail ${c.envios ? 'novamente ' : ''}para ${c.fornecedor?.nome} (${c.fornecedor?.email})?`)) return
+    enviarEmails([c.id], c.envios > 0)
   }
 
   const excluir = async () => {
@@ -197,6 +239,7 @@ export default function CotacaoDetalhe() {
       <Link to="/cotacoes" className="voltar"><IconeVoltar /> Cotações</Link>
 
       {erro && <div className="alerta alerta-erro">{erro}</div>}
+      {aviso && <div className="alerta alerta-ok">{aviso}</div>}
 
       {/* ---------- Cabeçalho ---------- */}
       <div className="card">
@@ -283,12 +326,19 @@ export default function CotacaoDetalhe() {
           <div>
             <h3>Fornecedores</h3>
             {rascunho && convites.length > 0 && (
-              <div className="texto-suave">Os links funcionam depois que você clicar em <strong>Liberar para respostas</strong>.</div>
+              <div className="texto-suave">Ao clicar em <strong>Liberar para respostas</strong>, todos recebem o pedido por e-mail.</div>
             )}
           </div>
-          {cotacao.status !== 'cancelada' && (
-            <button className="btn btn-secundario btn-pequeno" onClick={abrirModalForn}>+ Adicionar fornecedores</button>
-          )}
+          <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+            {aberta && pendentes > 0 && (
+              <button className="btn btn-primario btn-pequeno" onClick={() => enviarEmails()} disabled={enviando}>
+                <IconeEmail /> {enviando ? 'Enviando...' : `Enviar por e-mail (${pendentes})`}
+              </button>
+            )}
+            {cotacao.status !== 'cancelada' && (
+              <button className="btn btn-secundario btn-pequeno" onClick={abrirModalForn}>+ Adicionar fornecedores</button>
+            )}
+          </div>
         </div>
 
         {convites.length === 0 ? (
@@ -311,6 +361,8 @@ export default function CotacaoDetalhe() {
                     <div className="meta">
                       <span>{c.fornecedor?.email}</span>
                       {quando && <span>{quando}</span>}
+                      {c.envios > 1 && <span>{c.envios} envios</span>}
+                      {c.erro_envio && <span style={{ color: 'var(--vermelho)' }}>erro no e-mail: {c.erro_envio}</span>}
                     </div>
                   </div>
                   {copiado === c.id && <span className="copiado">Link copiado!</span>}
@@ -321,6 +373,10 @@ export default function CotacaoDetalhe() {
                     )}
                     {aberta && (
                       <>
+                        {c.status !== 'respondido' && (
+                          <button className="btn-icone" title={c.envios ? 'Reenviar e-mail' : 'Enviar e-mail'}
+                            onClick={() => reenviar(c)} disabled={enviando}><IconeEmail /></button>
+                        )}
                         <button className="btn-icone" title="Copiar link" onClick={() => copiarLink(c)}><IconeLink /></button>
                         {zap && (
                           <a className="btn-icone whats" title="Enviar pelo WhatsApp" href={zap} target="_blank"

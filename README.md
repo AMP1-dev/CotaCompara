@@ -83,7 +83,19 @@ torna `suporte@amp.ia.br` administrador — troque o e-mail se precisar.
   - Conta bloqueada: entra e vê o histórico, mas não cria nem libera cotações.
   - O cliente não consegue alterar o próprio plano (protegido no banco).
 
-> O envio automático por e-mail (Resend) é a fase 4.
+## Fase 4 — envio das cotações por e-mail
+
+**Banco:** rodar `supabase/04_envio_email.sql`.
+**Vercel (Environment Variables):** `RESEND_API_KEY` (Sensitive) e `EMAIL_FROM`
+(`CotaCompara <cotacao@amp.adm.br>`, já cadastrada).
+
+- Função `api/enviar-convites.js` (Vercel Function) envia pelo Resend, em lote, usando o
+  login do usuário (RLS vale) — a chave do Resend fica só no servidor.
+- Ao **Liberar para respostas**, todos os fornecedores recebem o e-mail automaticamente.
+- Botão **Enviar por e-mail (N)** para os pendentes e ícone ✉ para reenviar (vira "Lembrete").
+- Reply-to = e-mail de contato da empresa (ou o de login): a resposta cai direto no comprador.
+- Erros de envio aparecem em vermelho no fornecedor.
+- O envio só funciona no site publicado (no `npm run dev` local não há a função /api).
 
 ---
 

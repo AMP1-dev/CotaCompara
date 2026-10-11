@@ -10,3 +10,4 @@ export const IconeWhats = () => (
 export const IconeLink = () => <svg {...svg}><path d="M10 13a5 5 0 0 0 7.5.5l3-3a5 5 0 0 0-7-7l-1.7 1.7" /><path d="M14 11a5 5 0 0 0-7.5-.5l-3 3a5 5 0 0 0 7 7l1.7-1.7" /></svg>
 export const IconeVoltar = () => <svg {...svg}><path d="M15 18l-6-6 6-6" /></svg>
 export const IconeMais = () => <svg {...svg}><path d="M12 5v14M5 12h14" /></svg>
+export const IconeEmail = () => <svg {...svg}><rect x="3" y="5" width="18" height="14" rx="2" /><path d="m3 7 9 6 9-6" /></svg>
