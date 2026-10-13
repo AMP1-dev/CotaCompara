@@ -52,6 +52,7 @@ export default function OrcamentoEditar() {
   const [erro, setErro] = useState('')
   const [ok, setOk] = useState(copia ? 'Cópia criada: confira o cliente e salve.' : '')
   const [docBusca, setDocBusca] = useState('')
+  const [noPainel, setNoPainel] = useState(false)
 
   // catálogo do fornecedor (para sugerir nome e último preço)
   useEffect(() => {
@@ -240,7 +241,8 @@ export default function OrcamentoEditar() {
   const link = (r) => `${APP_URL}/o/${r.token}`
 
   const registrarEnvio = async (r) => {
-    const { error } = await supabase.rpc('registrar_envio_orcamento', { p_id: r.id })
+    const { data, error } = await supabase.rpc('registrar_envio_orcamento', { p_id: r.id })
+    if (data?.no_painel_do_cliente) setNoPainel(true)
     if (!error) setOrc((o) => ({ ...(o || r), status: (o || r).status === 'rascunho' ? 'enviado' : (o || r).status, enviado_em: (o || r).enviado_em || new Date().toISOString() }))
   }
 
@@ -335,6 +337,7 @@ export default function OrcamentoEditar() {
       )}
       {erro && <div className="alerta alerta-erro">{erro}</div>}
       {ok && <div className="alerta alerta-ok">{ok}</div>}
+      {noPainel && <div className="alerta alerta-info">⚡ {cliente.nome || 'Este cliente'} também usa o CotaCompara: o orçamento já apareceu no painel dele, em "Propostas recebidas".</div>}
 
       {/* ---------------- 1. entrada ---------------- */}
       <div className="card">

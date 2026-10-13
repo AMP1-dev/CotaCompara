@@ -15,7 +15,7 @@ export const numeroCotacao = (n) => '#' + String(n || 0).padStart(4, '0')
 
 const MAX_ITENS_EMAIL = 15
 
-export function montarEmailCotacao({ empresa, cotacao, itens, fornecedor, link, reenvio = false, tipo = 'convite' }) {
+export function montarEmailCotacao({ empresa, cotacao, itens, fornecedor, link, reenvio = false, tipo = 'convite', usuario = false, linkPainel = null }) {
   const correcao = tipo === 'correcao'
   const prazo = dataHora(cotacao.prazo_resposta)
   const local = [empresa.cidade, empresa.uf].filter(Boolean).join(' / ')
@@ -64,6 +64,7 @@ export function montarEmailCotacao({ empresa, cotacao, itens, fornecedor, link, 
         <table role="presentation" cellpadding="0" cellspacing="0"><tr><td style="border-radius:8px;background:#3483FA;">
           <a href="${esc(link)}" style="display:inline-block;padding:15px 34px;font-size:16px;font-weight:bold;color:#FFFFFF;text-decoration:none;border-radius:8px;">${correcao ? 'Corrigir proposta' : 'Responder cotação'}</a>
         </td></tr></table>
+        ${usuario && linkPainel ? `<p style="margin:12px 0 0;font-size:13px;color:#00753A;">⚡ Você usa o CotaCompara: este pedido já está no seu painel (menu Orçamentos), com os preços do seu catálogo.<br><a href="${esc(linkPainel)}" style="color:#3483FA;">Responder pelo painel</a></p>` : ''}
       </td></tr>
       <tr><td style="padding:16px 28px 0;">
         <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="border-collapse:collapse;">

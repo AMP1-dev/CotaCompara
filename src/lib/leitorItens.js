@@ -266,15 +266,23 @@ function parecido(a, b) {
   return false
 }
 
+const CORES = new Set(['azul', 'vermelho', 'vermelha', 'preto', 'preta', 'verde', 'amarelo', 'amarela', 'branco', 'branca', 'rosa', 'roxo', 'roxa', 'laranja', 'cinza', 'marrom', 'lilas', 'dourado', 'prata'])
+const ehMedida = (t) => /\d/.test(t)
+
 export function similaridade(a, b) {
   const ta = tokens(a), tb = tokens(b)
   if (!ta.length || !tb.length) return 0
   const usados = new Set()
+  const sobraA = []
   let iguais = 0
   for (const x of ta) {
     const j = tb.findIndex((y, k) => !usados.has(k) && parecido(x, y))
-    if (j >= 0) { usados.add(j); iguais++ }
+    if (j >= 0) { usados.add(j); iguais++ } else sobraA.push(x)
   }
+  const sobraB = tb.filter((_, k) => !usados.has(k))
+  // cor ou medida diferente = outro produto (caneta azul ≠ caneta vermelha; A4 ≠ A3; 10 matérias ≠ 1 matéria)
+  if (sobraA.some((t) => CORES.has(t)) && sobraB.some((t) => CORES.has(t))) return 0
+  if (sobraA.some(ehMedida) && sobraB.some(ehMedida)) return 0
   return (2 * iguais) / (ta.length + tb.length)
 }
 

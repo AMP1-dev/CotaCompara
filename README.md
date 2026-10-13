@@ -127,6 +127,21 @@ torna `suporte@amp.ia.br` administrador — troque o e-mail se precisar.
   o fornecedor vê "cliente abriu" e "aprovado" em tempo real na lista.
 - CNPJ obrigatório também para orçamentos (sai no documento).
 
+## Fase 6 — Integração entre usuários (sem login extra)
+
+**SQL:** rode `supabase/07_integracao_usuarios.sql` (depois do 06).
+
+- Ao disparar a cotação, o sistema confere a base: se o fornecedor já usa o CotaCompara (mesmo **CNPJ** ou
+  **e-mail** da conta/de contato), o pedido **cai direto no painel dele** (Orçamentos › Pedidos recebidos e
+  aviso no Painel), com os preços do catálogo dele já preenchidos. Ele responde ali e a resposta entra no mapa
+  do comprador como sempre. Quem não é usuário continua recebendo só pelo e-mail/link.
+- O e-mail continua saindo para todos; para quem é usuário ele avisa "este pedido já está no seu painel".
+- No detalhe da cotação, o comprador vê o selo "⚡ no painel dele" nos fornecedores que são usuários.
+- O contrário também: orçamento enviado pelo Orçamento Rápido para um cliente usuário aparece no Painel dele
+  em **Propostas recebidas** (abre a página do orçamento, onde ele aprova).
+- O fornecedor vê só "Respondido / Encerrada" — o resultado (quem venceu) não é mostrado.
+- A resposta pelo painel também ensina o catálogo (próximo pedido já vem com o preço).
+
 ## 1. Supabase (projeto compartilhado "Fixos")
 
 O CotaCompara roda no mesmo projeto Supabase de outros apps AMP, isolado no

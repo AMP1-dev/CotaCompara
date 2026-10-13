@@ -62,7 +62,7 @@ export default async function handler(req, res) {
 
   let consulta = sb
     .from('convites')
-    .select('id, token, status, envios, pode_corrigir, fornecedor:fornecedores(nome, contato, email)')
+    .select('id, token, status, envios, pode_corrigir, destino_empresa_id, fornecedor:fornecedores(nome, contato, email)')
     .eq('cotacao_id', cotacao_id)
   if (Array.isArray(convite_ids) && convite_ids.length) consulta = consulta.in('id', convite_ids)
   else consulta = consulta.eq('status', 'pendente')
@@ -84,6 +84,8 @@ export default async function handler(req, res) {
       link: `${APP_URL}/r/${c.token}`,
       reenvio: reenvio || c.envios > 0,
       tipo: c.pode_corrigir ? 'correcao' : tipo,
+      usuario: !!c.destino_empresa_id,
+      linkPainel: `${APP_URL}/pedidos/${c.token}`,
     })
     return {
       from: EMAIL_FROM,

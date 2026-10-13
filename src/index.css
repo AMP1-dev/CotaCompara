@@ -903,3 +903,20 @@ h3 { font-size: 16px; font-weight: 700; }
 .orc-chamada small { color: var(--texto-2); font-size: 13px; }
 .orc-chamada-seta { color: var(--azul); font-weight: 700; white-space: nowrap; }
 @media (max-width: 720px) { .orc-chamada { flex-wrap: wrap; } .orc-chamada-seta { width: 100%; } }
+
+/* ---------- Fase 6: integração entre usuários ---------- */
+.selo-usuario { display: inline-block; margin-left: 8px; font-size: 11px; font-weight: 600; color: #1F4E96; background: var(--azul-claro); border-radius: 10px; padding: 1px 8px; vertical-align: 2px; }
+.ped-caixa { border-left: 4px solid var(--azul); padding-bottom: 8px; margin-bottom: 16px; }
+.ped-caixa h3 small { font-weight: 400; margin-left: 6px; }
+.ped-caixa .ped-item { padding-left: 0; padding-right: 0; }
+.ped-alerta { border-left-color: var(--azul); background: #F4F8FF; }
+.ped-cab, .ped-linha { grid-template-columns: 28px minmax(0, 1fr) 80px 70px 128px 112px 70px; }
+.ped-prod { padding-top: 9px; font-size: 14.5px; }
+.ped-prod small { color: var(--texto-3); }
+.ped-num { text-align: right; padding-top: 9px; font-variant-numeric: tabular-nums; }
+.ped-un { padding-top: 9px; color: var(--texto-2); font-size: 14px; }
+.ped-nao { padding-top: 10px; text-align: center; }
+.ped-nao input { width: 18px; height: 18px; accent-color: var(--vermelho); }
+@media (max-width: 900px) {
+  .ped-linha { grid-template-columns: 24px 1fr 1fr 44px; grid-template-areas: "n prod prod prod" ". qtd un rm" ". preco sub sub"; }
+}

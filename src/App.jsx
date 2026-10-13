@@ -22,6 +22,7 @@ import AtivarConta from './pages/AtivarConta'
 import Orcamentos from './pages/Orcamentos'
 import OrcamentoEditar from './pages/OrcamentoEditar'
 import OrcamentoPublico from './pages/OrcamentoPublico'
+import PedidoResponder from './pages/PedidoResponder'
 
 function Inicio() {
   const { session, carregando } = useAuth()
@@ -67,6 +68,7 @@ export default function App() {
         <Route path="/orcamentos" element={<Orcamentos />} />
         <Route path="/orcamentos/novo" element={<ExigirCnpj><OrcamentoEditar /></ExigirCnpj>} />
         <Route path="/orcamentos/:id" element={<OrcamentoEditar />} />
+        <Route path="/pedidos/:token" element={<PedidoResponder />} />
       </Route>
 
       <Route path="*" element={<Navigate to="/" replace />} />

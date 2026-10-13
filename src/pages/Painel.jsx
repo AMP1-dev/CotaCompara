@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { supabase, SCHEMA } from '../lib/supabase'
 import { useAuth } from '../contexts/AuthContext'
-import { STATUS_COTACAO, numeroCotacao, formatarData, formatarMoeda } from '../lib/format'
+import { STATUS_COTACAO, STATUS_ORCAMENTO, numeroCotacao, formatarData, formatarMoeda } from '../lib/format'
 import { vencedorDasPropostas } from '../lib/comparativo'
 import Badge from '../components/Badge'
 
@@ -13,6 +13,16 @@ export default function Painel() {
   const [cotacoes, setCotacoes] = useState([])
   const [economiaTotal, setEconomiaTotal] = useState(0)
   const [carregando, setCarregando] = useState(true)
+  const [pedidosAbertos, setPedidosAbertos] = useState(0)
+  const [propostas, setPropostas] = useState([])
+
+  // integração entre usuários: pedidos que chegaram para mim e orçamentos que fornecedores me mandaram
+  useEffect(() => {
+    if (!empresa) return
+    supabase.rpc('pedidos_recebidos').then(({ data }) =>
+      setPedidosAbertos((data || []).filter((p) => p.cotacao.aberta && (!p.respondido_em || p.pode_corrigir)).length))
+    supabase.rpc('propostas_recebidas').then(({ data }) => setPropostas(data || []))
+  }, [empresa])
 
   useEffect(() => {
     if (!empresa) return
@@ -107,6 +117,46 @@ export default function Painel() {
           <div className="detalhe">vencedor × proposta mais cara</div>
         </div>
       </div>
+
+      {pedidosAbertos > 0 && (
+        <Link to="/orcamentos" className="card orc-chamada ped-alerta">
+          <span className="orc-chamada-icone">📥</span>
+          <span>
+            <b>Você tem {pedidosAbertos} {pedidosAbertos === 1 ? 'pedido de cotação' : 'pedidos de cotação'} para responder</b>
+            <small>Compradores que usam o CotaCompara enviaram direto para o seu painel. Seus preços do catálogo já vêm preenchidos.</small>
+          </span>
+          <span className="orc-chamada-seta">Responder →</span>
+        </Link>
+      )}
+
+      {propostas.length > 0 && (
+        <div className="card" style={{ marginTop: 16, padding: 0 }}>
+          <div className="secao-topo" style={{ padding: '16px 20px 0' }}>
+            <h3>📨 Propostas recebidas <small className="texto-suave">orçamentos que fornecedores enviaram para você</small></h3>
+          </div>
+          <div className="lista" style={{ boxShadow: 'none' }}>
+            {propostas.slice(0, 6).map((o) => {
+              const st = STATUS_ORCAMENTO[o.status] || STATUS_ORCAMENTO.enviado
+              const vencido = o.status === 'enviado' && o.valido_ate && new Date(o.valido_ate) < new Date()
+              return (
+                <a key={o.token} className="lista-item clicavel" href={`/o/${o.token}`} target="_blank" rel="noreferrer">
+                  <div className="principal">
+                    <div className="titulo">{o.fornecedor.nome}{o.referencia ? ` · ${o.referencia}` : ''}</div>
+                    <div className="meta">
+                      <span className="mono">{numeroCotacao(o.numero)}</span>
+                      <span>{o.itens} {o.itens === 1 ? 'item' : 'itens'}</span>
+                      <span>recebido {formatarData(o.enviado_em)}</span>
+                      {o.status === 'enviado' && !vencido && <span>válido até {formatarData(o.valido_ate, false)}</span>}
+                    </div>
+                  </div>
+                  <div className="orc-total">{formatarMoeda(o.total)}</div>
+                  {vencido ? <Badge cor="laranja">vencido</Badge> : <Badge cor={o.status === 'enviado' ? 'laranja' : st.cor}>{o.status === 'enviado' ? 'aguardando você' : st.rotulo}</Badge>}
+                </a>
+              )
+            })}
+          </div>
+        </div>
+      )}
 
       <Link to="/orcamentos/novo" className="card orc-chamada">
         <span className="orc-chamada-icone">⚡</span>

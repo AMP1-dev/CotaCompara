@@ -42,7 +42,7 @@ export default function CotacaoDetalhe() {
   const carregarConvites = useCallback(async () => {
     const { data } = await supabase
       .from('convites')
-      .select('id, token, status, envios, erro_envio, pode_corrigir, revisao, correcao_liberada_em, enviado_em, aberto_em, respondido_em, prazo_entrega_dias, condicao_pagamento, frete, observacao, fornecedor:fornecedores(id, nome, contato, email, whatsapp)')
+      .select('id, token, status, envios, erro_envio, pode_corrigir, revisao, correcao_liberada_em, enviado_em, aberto_em, respondido_em, prazo_entrega_dias, condicao_pagamento, frete, observacao, destino_empresa_id, fornecedor:fornecedores(id, nome, contato, email, whatsapp)')
       .eq('cotacao_id', id)
       .order('created_at')
     setConvites(data || [])
@@ -379,7 +379,7 @@ export default function CotacaoDetalhe() {
               return (
                 <div key={c.id} className="lista-item">
                   <div className="principal">
-                    <div className="titulo">{c.fornecedor?.nome}</div>
+                    <div className="titulo">{c.fornecedor?.nome}{c.destino_empresa_id && <span className="selo-usuario" title="Este fornecedor usa o CotaCompara: o pedido aparece direto no painel dele">⚡ no painel dele</span>}</div>
                     <div className="meta">
                       <span>{c.fornecedor?.email}</span>
                       {quando && <span>{quando}</span>}

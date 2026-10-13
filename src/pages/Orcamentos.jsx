@@ -11,6 +11,9 @@ const ABAS = [
   { id: 'aprovado', rotulo: 'Aprovados' },
 ]
 
+// pedido ainda aceita resposta (ou correção liberada)
+const pedidoAberto = (p) => p.cotacao.aberta && (!p.respondido_em || p.pode_corrigir)
+
 const totalDe = (o) => {
   const sub = (o.orcamento_itens || []).reduce((s, i) => s + (i.preco_unitario == null ? 0 : Math.round(i.quantidade * i.preco_unitario * 100) / 100), 0)
   return Math.max(sub - Number(o.desconto || 0), 0) + Number(o.frete || 0)
@@ -23,6 +26,8 @@ export default function Orcamentos() {
   const [carregando, setCarregando] = useState(true)
   const [aba, setAba] = useState('todos')
   const [busca, setBusca] = useState('')
+  const [pedidos, setPedidos] = useState([])
+  const [verTodosPedidos, setVerTodosPedidos] = useState(false)
 
   useEffect(() => {
     const carregar = () => supabase
@@ -35,6 +40,7 @@ export default function Orcamentos() {
         setCarregando(false)
       })
     carregar()
+    supabase.rpc('pedidos_recebidos').then(({ data }) => setPedidos(data || []))
     // tempo real: cliente abriu ou aprovou
     const canal = supabase.channel('orcamentos-lista')
       .on('postgres_changes', { event: 'UPDATE', schema: SCHEMA, table: 'orcamentos' }, carregar)
@@ -61,6 +67,36 @@ export default function Orcamentos() {
         <Link to="/orcamentos/novo" className="btn btn-primario">+ Novo orçamento</Link>
       </div>
 
+      {pedidos.length > 0 && (
+        <div className="card ped-caixa">
+          <div className="secao-topo" style={{ marginBottom: 8 }}>
+            <h3>📥 Pedidos recebidos <small className="texto-suave">de compradores que usam o CotaCompara</small></h3>
+            {pedidos.filter(pedidoAberto).length > 0 && <span className="badge badge-laranja">{pedidos.filter(pedidoAberto).length} para responder</span>}
+          </div>
+          {(verTodosPedidos ? pedidos : pedidos.slice(0, 5)).map((p) => {
+            const aberto = pedidoAberto(p)
+            return (
+              <div key={p.token} className="lista-item clicavel ped-item" onClick={() => navigate(`/pedidos/${p.token}`)}>
+                <div className="principal">
+                  <div className="titulo">{p.comprador.nome} · {p.cotacao.titulo}</div>
+                  <div className="meta">
+                    <span className="mono">{numeroCotacao(p.cotacao.numero)}</span>
+                    <span>{p.cotacao.itens} {p.cotacao.itens === 1 ? 'item' : 'itens'}</span>
+                    {p.comprador.cidade && <span>{p.comprador.cidade}/{p.comprador.uf}</span>}
+                    <span>recebido {formatarData(p.recebido_em)}</span>
+                    {aberto && p.cotacao.prazo_resposta && <span>responder até {formatarData(p.cotacao.prazo_resposta)}</span>}
+                  </div>
+                </div>
+                {aberto ? <span className="btn btn-primario btn-pequeno">{p.pode_corrigir ? 'Corrigir' : 'Responder'}</span>
+                  : p.respondido_em ? <Badge cor={p.cotacao.status === 'encerrada' ? '' : 'verde'}>{p.cotacao.status === 'encerrada' ? 'Encerrada' : 'Respondido'}</Badge>
+                  : <Badge>{p.cotacao.status === 'encerrada' ? 'Encerrada' : 'Prazo encerrado'}</Badge>}
+              </div>
+            )
+          })}
+          {pedidos.length > 5 && <button className="btn btn-texto btn-pequeno" onClick={() => setVerTodosPedidos(!verTodosPedidos)}>{verTodosPedidos ? 'Ver menos' : `Ver todos (${pedidos.length})`}</button>}
+        </div>
+      )}
+
       {lista.length > 0 && (
         <div className="grid grid-3" style={{ marginBottom: 16 }}>
           <div className="card stat"><div className="rotulo">Orçamentos enviados</div><div className="valor">{lista.filter((o) => o.status !== 'rascunho').length}</div></div>
@@ -82,6 +118,8 @@ export default function Orcamentos() {
 
       {carregando ? (
         <div className="card">Carregando...</div>
+      ) : lista.length === 0 && pedidos.length > 0 ? (
+        <div className="card texto-suave">Você ainda não enviou orçamentos por conta própria. Recebeu um pedido por WhatsApp, PDF ou foto? <Link to="/orcamentos/novo">Responda aqui</Link>.</div>
       ) : lista.length === 0 ? (
         <div className="card">
           <div className="vazio">
