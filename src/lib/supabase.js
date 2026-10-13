@@ -40,7 +40,11 @@ export function traduzErro(err) {
 
 // Erros de regra de negócio que vêm do banco (raise exception)
 const ERROS_BANCO = {
-  CNPJ_OBRIGATORIO: 'Cadastre o CNPJ da sua empresa em "Minha empresa" antes de criar ou liberar cotações.',
+  CNPJ_OBRIGATORIO: 'Cadastre o CNPJ da sua empresa em "Minha empresa" antes de criar cotações ou orçamentos.',
+  LINK_INVALIDO: 'Link inválido ou expirado. Peça um novo link a quem enviou.',
+  ORCAMENTO_VENCIDO: 'A validade deste orçamento terminou. Peça um orçamento atualizado ao fornecedor.',
+  ORCAMENTO_INDISPONIVEL: 'Este orçamento não está disponível para aprovação.',
+  NOME_OBRIGATORIO: 'Informe seu nome para aprovar.',
   CONTA_BLOQUEADA: 'Sua conta está suspensa. Fale com o suporte do CotaCompara.',
   ACESSO_NEGADO: 'Acesso restrito ao administrador.',
 }

@@ -18,6 +18,7 @@ export default function Header() {
           <NavLink to="/painel" className={classe} onClick={fechar}>Painel</NavLink>
           <NavLink to="/cotacoes" className={classe} onClick={fechar}>Cotações</NavLink>
           <NavLink to="/fornecedores" className={classe} onClick={fechar}>Fornecedores</NavLink>
+          <NavLink to="/orcamentos" className={classe} onClick={fechar}>Orçamentos</NavLink>
           <NavLink to="/minha-empresa" className={classe} onClick={fechar}>Minha empresa</NavLink>
         </nav>
 

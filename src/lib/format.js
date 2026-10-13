@@ -15,7 +15,14 @@ export const STATUS_CONVITE = {
   recusado:   { rotulo: 'Recusou',     cor: 'vermelho' },
 }
 
-export const UNIDADES = ['UN', 'CX', 'PCT', 'FD', 'KG', 'G', 'L', 'ML', 'M', 'M²', 'M³', 'SC', 'RL', 'PAR', 'DZ', 'JG', 'GL', 'LT']
+export const UNIDADES = ['UN', 'CX', 'PCT', 'FD', 'RESMA', 'BL', 'KIT', 'JG', 'FR', 'TB', 'CT', 'KG', 'G', 'L', 'ML', 'M', 'M²', 'M³', 'SC', 'RL', 'PAR', 'DZ', 'GL', 'LT']
+
+export const STATUS_ORCAMENTO = {
+  rascunho: { rotulo: 'Rascunho', cor: '' },
+  enviado:  { rotulo: 'Enviado',  cor: 'azul' },
+  aprovado: { rotulo: 'Aprovado', cor: 'verde' },
+  recusado: { rotulo: 'Recusado', cor: 'vermelho' },
+}
 
 export const numeroCotacao = (n) => '#' + String(n || 0).padStart(4, '0')
 

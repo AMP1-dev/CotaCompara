@@ -79,7 +79,10 @@ export default function Painel() {
             {empresa?.nome}{!carregando && ` · ${n.fornecedores} ${n.fornecedores === 1 ? 'fornecedor' : 'fornecedores'} na agenda`}
           </div>
         </div>
-        <Link to="/cotacoes/nova" className="btn btn-primario">+ Nova cotação</Link>
+        <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+          <Link to="/orcamentos/novo" className="btn btn-secundario">+ Responder orçamento</Link>
+          <Link to="/cotacoes/nova" className="btn btn-primario">+ Nova cotação</Link>
+        </div>
       </div>
 
       <div className="grid grid-4">
@@ -104,6 +107,15 @@ export default function Painel() {
           <div className="detalhe">vencedor × proposta mais cara</div>
         </div>
       </div>
+
+      <Link to="/orcamentos/novo" className="card orc-chamada">
+        <span className="orc-chamada-icone">⚡</span>
+        <span>
+          <b>Recebeu um pedido de orçamento por WhatsApp, PDF ou foto?</b>
+          <small>Cole ou envie o arquivo: o CotaCompara monta a tabela, você coloca os preços e manda um orçamento profissional em minutos.</small>
+        </span>
+        <span className="orc-chamada-seta">Orçamento Rápido →</span>
+      </Link>
 
       {/* ---------- Resultados ---------- */}
       {recentes.length > 0 && (

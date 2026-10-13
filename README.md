@@ -111,6 +111,22 @@ torna `suporte@amp.ia.br` administrador — troque o e-mail se precisar.
 
 ---
 
+## Fase 5 — Orçamento Rápido (o fornecedor responde pedidos recebidos fora do CotaCompara)
+
+**SQL:** rode `supabase/06_orcamento_rapido.sql` (depois do 01 ao 05).
+
+- Menu **Orçamentos**: o fornecedor cola a mensagem do WhatsApp, envia PDF, foto/print ou Excel/CSV
+  e o sistema monta a **tabela editável** (produto, quantidade, unidade). Tudo lido **no navegador, sem custo**:
+  texto e planilha por regras próprias, PDF com pdf.js, foto e PDF escaneado com Tesseract.js (OCR em português).
+- **Catálogo do fornecedor**: cada orçamento enviado ensina o sistema; no próximo, o nome certo e o
+  último preço já aparecem (sugestão "Você já orçou: ... usar").
+- Condições (validade, prazo, pagamento, frete, desconto, observações) com opção de salvar como padrão.
+- Saída: **WhatsApp** (mensagem pronta com link), **e-mail** (Resend, `api/enviar-orcamento.js`),
+  **link** copiado e **PDF A4 retrato de 1 página** com os dados da empresa.
+- Página pública `/o/:token`: o cliente vê, baixa o PDF e **aprova** (fica registrado quem aprovou);
+  o fornecedor vê "cliente abriu" e "aprovado" em tempo real na lista.
+- CNPJ obrigatório também para orçamentos (sai no documento).
+
 ## 1. Supabase (projeto compartilhado "Fixos")
 
 O CotaCompara roda no mesmo projeto Supabase de outros apps AMP, isolado no

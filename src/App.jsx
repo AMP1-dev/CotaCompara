@@ -19,6 +19,9 @@ import Admin from './pages/Admin'
 import RotaAdmin from './components/RotaAdmin'
 import ResponderCotacao from './pages/ResponderCotacao'
 import AtivarConta from './pages/AtivarConta'
+import Orcamentos from './pages/Orcamentos'
+import OrcamentoEditar from './pages/OrcamentoEditar'
+import OrcamentoPublico from './pages/OrcamentoPublico'
 
 function Inicio() {
   const { session, carregando } = useAuth()
@@ -43,6 +46,9 @@ export default function App() {
       {/* Tela do fornecedor (sem login) */}
       <Route path="/r/:token" element={<ResponderCotacao />} />
 
+      {/* Orçamento enviado pelo fornecedor ao cliente (sem login) */}
+      <Route path="/o/:token" element={<OrcamentoPublico />} />
+
       {/* Relatório para impressão (sem menu) */}
       <Route path="/cotacoes/:id/imprimir" element={<RotaProtegida><CotacaoImprimir /></RotaProtegida>} />
 
@@ -58,6 +64,9 @@ export default function App() {
         <Route path="/cotacoes/nova" element={<ExigirCnpj><CotacaoEditar /></ExigirCnpj>} />
         <Route path="/cotacoes/:id" element={<CotacaoDetalhe />} />
         <Route path="/cotacoes/:id/editar" element={<CotacaoEditar />} />
+        <Route path="/orcamentos" element={<Orcamentos />} />
+        <Route path="/orcamentos/novo" element={<ExigirCnpj><OrcamentoEditar /></ExigirCnpj>} />
+        <Route path="/orcamentos/:id" element={<OrcamentoEditar />} />
       </Route>
 
       <Route path="*" element={<Navigate to="/" replace />} />

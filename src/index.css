@@ -751,3 +751,155 @@ h3 { font-size: 16px; font-weight: 700; }
 .mapa-era { display: block; font-size: 11px; color: #B84A12; }
 .mapa-era::before { content: '↻ '; }
 .badge-correcao { background: #FFF1E8; color: #B84A12; }
+
+/* =====================================================================
+   ORÇAMENTO RÁPIDO (fase 5) — o fornecedor responde pedidos recebidos
+   ===================================================================== */
+.grid-3 { grid-template-columns: repeat(3, 1fr); }
+.lista-item .meta .ok { color: #00753A; font-weight: 600; }
+.orc-total { font-family: var(--fonte-destaque); font-weight: 700; font-variant-numeric: tabular-nums; white-space: nowrap; }
+
+/* entrada */
+.orc-modos { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-bottom: 14px; }
+.orc-modos button {
+  display: flex; flex-direction: column; gap: 2px; align-items: flex-start; text-align: left;
+  border: 2px solid var(--borda); background: #fff; border-radius: 10px; padding: 12px 14px; cursor: pointer; font: inherit; color: var(--texto);
+}
+.orc-modos button b { font-size: 15px; }
+.orc-modos button span { font-size: 12.5px; color: var(--texto-2); }
+.orc-modos button:hover { border-color: #C9C9C9; }
+.orc-modos button.ativo { border-color: var(--azul); background: var(--azul-claro); }
+.orc-colar { min-height: 190px; font-size: 14px; }
+.orc-drop {
+  border: 2px dashed #C9C9C9; border-radius: 12px; padding: 30px 18px; text-align: center; cursor: pointer;
+  display: flex; flex-direction: column; align-items: center; gap: 6px; background: #FAFAFA; transition: all .15s;
+}
+.orc-drop:hover, .orc-drop.sobre { border-color: var(--azul); background: var(--azul-claro); }
+.orc-drop span { color: var(--texto-2); font-size: 14px; }
+.orc-drop small { color: var(--texto-3); font-size: 12px; max-width: 460px; }
+.orc-lendo { display: flex; flex-direction: column; align-items: center; gap: 10px; color: var(--texto-2); }
+.orc-barra { width: 240px; height: 6px; background: #E6E6E6; border-radius: 3px; overflow: hidden; }
+.orc-barra div { height: 100%; background: var(--azul); transition: width .2s; }
+.orc-original {
+  white-space: pre-wrap; font-family: var(--fonte-mono); font-size: 12px; background: #FAFAFA; border: 1px solid var(--borda);
+  border-radius: var(--raio); padding: 12px; max-height: 260px; overflow: auto; margin: 12px 0 0;
+}
+
+/* itens com preço */
+.orc-cab, .orc-linha {
+  display: grid; grid-template-columns: 28px minmax(0, 1fr) 92px 92px 128px 112px 36px; gap: 8px; align-items: start;
+}
+.orc-cab { font-size: 12px; color: var(--texto-2); text-transform: uppercase; letter-spacing: 0.4px; padding: 0 0 6px; }
+.orc-linha { padding: 6px 0; border-radius: 6px; }
+.orc-linha.conferir { background: #FFF8D6; box-shadow: 0 0 0 6px #FFF8D6; margin: 6px 0; }
+.orc-linha .n { font-family: var(--fonte-mono); font-size: 12px; color: var(--texto-3); text-align: center; padding-top: 11px; }
+.orc-linha .input, .orc-linha .select { padding: 9px 10px; font-size: 14px; }
+.orc-linha .qtd { text-align: right; font-variant-numeric: tabular-nums; }
+.orc-linha .c-sub { text-align: right; padding-top: 10px; font-variant-numeric: tabular-nums; font-size: 14px; font-weight: 600; }
+.orc-sugestao {
+  margin-top: 4px; font-size: 12.5px; color: #1F4E96; background: var(--azul-claro); border-radius: 6px; padding: 5px 8px;
+  display: flex; gap: 6px; align-items: center; flex-wrap: wrap;
+}
+.orc-sugestao button { border: 0; background: var(--azul); color: #fff; border-radius: 4px; padding: 2px 8px; font: inherit; font-size: 12px; cursor: pointer; }
+.orc-sugestao button.nao { background: none; color: var(--texto-2); }
+.orc-dica { margin-top: 3px; font-size: 11.5px; color: #00753A; }
+.orc-totais { margin: 14px 0 0 auto; max-width: 300px; display: grid; gap: 4px; font-size: 14px; }
+.orc-totais div { display: flex; justify-content: space-between; gap: 12px; }
+.orc-totais b { font-variant-numeric: tabular-nums; }
+.orc-totais .total { border-top: 1px solid var(--borda); padding-top: 8px; margin-top: 4px; font-size: 18px; }
+.orc-totais .total b { font-family: var(--fonte-destaque); color: var(--marinho); }
+.orc-check { display: flex; gap: 8px; align-items: center; font-size: 14px; color: var(--texto-2); cursor: pointer; }
+.orc-check input { width: 17px; height: 17px; accent-color: var(--azul); }
+
+/* barra de envio fixa */
+.orc-acoes {
+  position: sticky; bottom: 0; z-index: 20; margin: 16px -4px 0; background: #fff; border-radius: 10px 10px 0 0;
+  box-shadow: 0 -4px 18px rgba(0,0,0,.10); padding: 12px 16px; display: flex; justify-content: space-between; align-items: center; gap: 12px; flex-wrap: wrap;
+}
+.orc-acoes-total small { display: block; font-size: 12px; color: var(--texto-2); }
+.orc-acoes-total b { font-family: var(--fonte-destaque); font-size: 22px; color: var(--marinho); font-variant-numeric: tabular-nums; }
+.orc-acoes-botoes { display: flex; gap: 8px; flex-wrap: wrap; }
+.orc-acoes-botoes .btn { display: inline-flex; align-items: center; gap: 6px; }
+
+/* página pública do orçamento */
+.orc-pub { min-height: 100vh; padding-bottom: 30px; }
+.orc-pub-barra { background: var(--amarelo); padding: 10px 16px; position: sticky; top: 0; z-index: 10; box-shadow: var(--sombra); }
+.orc-pub-barra-in { max-width: 860px; margin: 0 auto; display: flex; justify-content: space-between; align-items: center; gap: 10px; flex-wrap: wrap; }
+.orc-pub-aviso { max-width: 860px; margin: 14px auto 0; }
+.orc-pub-erro { padding: 20px; }
+.orc-folha {
+  max-width: 860px; margin: 18px auto; background: #fff; border-radius: 8px; box-shadow: var(--sombra-2);
+  padding: 36px 40px; font-size: 13.5px; color: #222;
+}
+.orc-f-cab { display: flex; justify-content: space-between; gap: 20px; padding-bottom: 14px; border-bottom: 3px solid var(--amarelo); }
+.orc-f-emp { display: flex; gap: 14px; align-items: flex-start; color: var(--texto-2); font-size: 12.5px; line-height: 1.5; }
+.orc-f-logo { width: 64px; height: 64px; object-fit: contain; border-radius: 8px; }
+.orc-f-nome { font-family: var(--fonte-destaque); font-size: 22px; font-weight: 800; color: var(--texto); line-height: 1.2; margin-bottom: 2px; }
+.orc-f-doc { text-align: right; font-size: 12.5px; color: var(--texto-2); line-height: 1.6; white-space: nowrap; }
+.orc-f-tipo { font-family: var(--fonte-destaque); font-weight: 800; color: var(--marinho); font-size: 18px; text-transform: uppercase; letter-spacing: 1px; }
+.orc-f-num { font-size: 20px; color: var(--texto); font-weight: 700; }
+.orc-f-cliente { display: grid; grid-template-columns: 1.4fr 1fr; gap: 12px; background: #F7F7F7; border-radius: 6px; padding: 10px 14px; margin: 14px 0; }
+.orc-f-cliente span, .orc-f-cond span, .orc-f-totais span { display: block; font-size: 10.5px; text-transform: uppercase; letter-spacing: .5px; color: var(--texto-3); }
+.orc-f-tabela { width: 100%; border-collapse: collapse; font-family: var(--fonte-tabela); font-size: 13px; margin-top: 6px; }
+.orc-f-tabela th { text-align: left; font-size: 11px; text-transform: uppercase; letter-spacing: .4px; color: var(--texto-2); border-bottom: 2px solid #DDD; padding: 7px 8px; background: #FAFAFA; }
+.orc-f-tabela td { padding: 7px 8px; border-bottom: 1px solid #EEE; vertical-align: top; }
+.orc-f-tabela .num { text-align: right; white-space: nowrap; font-variant-numeric: tabular-nums; }
+.orc-f-tabela tr.sem td { color: var(--texto-3); }
+.orc-f-obs { font-size: 11.5px; color: var(--texto-3); }
+.orc-f-rodape { display: grid; grid-template-columns: 1fr 260px; gap: 20px; margin-top: 16px; align-items: start; }
+.orc-f-cond { display: grid; grid-template-columns: 1fr 1fr; gap: 10px 16px; font-size: 13px; }
+.orc-f-cond .obs { grid-column: 1 / -1; }
+.orc-f-totais { display: grid; gap: 6px; font-size: 13.5px; }
+.orc-f-totais div { display: flex; justify-content: space-between; align-items: baseline; font-variant-numeric: tabular-nums; }
+.orc-f-totais span { display: inline; font-size: 12px; text-transform: none; letter-spacing: 0; color: var(--texto-2); }
+.orc-f-totais .total span { font-size: 15px; font-weight: 700; color: var(--texto); }
+.orc-f-totais .total { border-top: 2px solid var(--texto); padding-top: 8px; font-size: 20px; font-weight: 800; font-family: var(--fonte-destaque); color: var(--marinho); }
+.orc-f-aprovado { margin-top: 16px; text-align: center; background: var(--verde-claro); color: #00753A; font-weight: 700; border-radius: 6px; padding: 8px; }
+.orc-f-assinatura { display: grid; grid-template-columns: 1fr 1fr; gap: 40px; margin-top: 46px; font-size: 12px; color: var(--texto-2); text-align: center; }
+.orc-f-assinatura .linha { border-top: 1px solid #999; margin-bottom: 6px; }
+.orc-f-marca { margin-top: 22px; text-align: center; font-size: 10px; color: var(--texto-3); }
+.orc-pub-cta {
+  max-width: 860px; margin: 0 auto; background: #fff; border-radius: 10px; box-shadow: var(--sombra); padding: 14px 18px;
+  display: flex; align-items: center; gap: 16px; flex-wrap: wrap;
+}
+.orc-pub-cta > div { flex: 1; min-width: 220px; display: flex; flex-direction: column; font-size: 14px; }
+.orc-pub-cta span { color: var(--texto-2); font-size: 13px; }
+
+.modo-impressao-orc .orc-folha { max-width: none; padding: 0; box-shadow: none; border-radius: 0; margin: 0; }
+@media print {
+  .orc-pub { padding: 0; min-height: 0; }
+  .orc-folha { max-width: none; padding: 0; box-shadow: none; border-radius: 0; margin: 0; }
+  .orc-f-tabela tr { page-break-inside: avoid; break-inside: avoid; }
+  .orc-f-rodape, .orc-f-assinatura { page-break-inside: avoid; break-inside: avoid; }
+}
+
+@media (max-width: 900px) {
+  .orc-cab { display: none; }
+  .orc-linha {
+    grid-template-columns: 24px 1fr 1fr 36px; grid-template-areas: "n prod prod rm" ". qtd un un" ". preco sub sub";
+    border-bottom: 1px solid var(--borda); padding: 10px 0; row-gap: 6px;
+  }
+  .orc-linha .n { grid-area: n; } .orc-linha .c-prod { grid-area: prod; } .orc-linha .c-rm { grid-area: rm; }
+  .orc-linha .c-qtd { grid-area: qtd; } .orc-linha .c-un { grid-area: un; } .orc-linha .c-preco { grid-area: preco; } .orc-linha .c-sub { grid-area: sub; padding-top: 10px; }
+  .grid-3 { grid-template-columns: 1fr; }
+}
+@media (max-width: 720px) {
+  .orc-modos { grid-template-columns: 1fr; }
+  .orc-modos button { flex-direction: row; align-items: baseline; gap: 8px; }
+  .orc-acoes { flex-direction: column; align-items: stretch; margin: 16px -12px 0; }
+  .orc-acoes-botoes .btn { flex: 1; justify-content: center; }
+  .orc-folha { padding: 20px 16px; }
+  .orc-f-cab { flex-direction: column; }
+  .orc-f-doc { text-align: left; }
+  .orc-f-cliente, .orc-f-rodape, .orc-f-cond { grid-template-columns: 1fr; }
+  .orc-f-tabela { font-size: 12px; }
+  .orc-f-tabela th:nth-child(1), .orc-f-tabela td:nth-child(1) { display: none; }
+  .orc-f-assinatura { gap: 16px; }
+}
+.orc-chamada { display: flex; align-items: center; gap: 14px; margin-top: 16px; color: inherit; border-left: 4px solid var(--amarelo-escuro); }
+.orc-chamada:hover { box-shadow: var(--sombra-2); color: inherit; }
+.orc-chamada-icone { font-size: 26px; }
+.orc-chamada > span:nth-child(2) { flex: 1; display: flex; flex-direction: column; gap: 2px; }
+.orc-chamada small { color: var(--texto-2); font-size: 13px; }
+.orc-chamada-seta { color: var(--azul); font-weight: 700; white-space: nowrap; }
+@media (max-width: 720px) { .orc-chamada { flex-wrap: wrap; } .orc-chamada-seta { width: 100%; } }
