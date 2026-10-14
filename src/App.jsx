@@ -1,3 +1,4 @@
+import { lazy, Suspense } from 'react'
 import { Routes, Route, Navigate } from 'react-router-dom'
 import { useAuth } from './contexts/AuthContext'
 import Layout from './components/Layout'
@@ -13,16 +14,18 @@ import Fornecedores from './pages/Fornecedores'
 import Cotacoes from './pages/Cotacoes'
 import CotacaoEditar from './pages/CotacaoEditar'
 import CotacaoDetalhe from './pages/CotacaoDetalhe'
-import CotacaoImprimir from './pages/CotacaoImprimir'
 import ExigirCnpj from './components/ExigirCnpj'
-import Admin from './pages/Admin'
 import RotaAdmin from './components/RotaAdmin'
-import ResponderCotacao from './pages/ResponderCotacao'
 import AtivarConta from './pages/AtivarConta'
 import Orcamentos from './pages/Orcamentos'
-import OrcamentoEditar from './pages/OrcamentoEditar'
-import OrcamentoPublico from './pages/OrcamentoPublico'
-import PedidoResponder from './pages/PedidoResponder'
+
+// telas carregadas só quando abertas (o app inicial fica menor e abre mais rápido)
+const CotacaoImprimir = lazy(() => import('./pages/CotacaoImprimir'))
+const Admin = lazy(() => import('./pages/Admin'))
+const ResponderCotacao = lazy(() => import('./pages/ResponderCotacao'))
+const OrcamentoEditar = lazy(() => import('./pages/OrcamentoEditar'))
+const OrcamentoPublico = lazy(() => import('./pages/OrcamentoPublico'))
+const PedidoResponder = lazy(() => import('./pages/PedidoResponder'))
 
 function Inicio() {
   const { session, carregando } = useAuth()
@@ -32,6 +35,7 @@ function Inicio() {
 
 export default function App() {
   return (
+    <Suspense fallback={<Carregando />}>
     <Routes>
       <Route path="/" element={<Inicio />} />
 
@@ -73,5 +77,6 @@ export default function App() {
 
       <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>
+    </Suspense>
   )
 }

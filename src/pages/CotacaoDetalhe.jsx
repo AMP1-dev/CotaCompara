@@ -40,25 +40,27 @@ export default function CotacaoDetalhe() {
   const [resultados, setResultados] = useState({ propostas: [], respostas: [] })
 
   const carregarConvites = useCallback(async () => {
-    const { data } = await supabase
-      .from('convites')
-      .select('id, token, status, envios, erro_envio, pode_corrigir, revisao, correcao_liberada_em, enviado_em, aberto_em, respondido_em, prazo_entrega_dias, condicao_pagamento, frete, observacao, destino_empresa_id, fornecedor:fornecedores(id, nome, contato, email, whatsapp)')
-      .eq('cotacao_id', id)
-      .order('created_at')
+    const [{ data }, res] = await Promise.all([
+      supabase
+        .from('convites')
+        .select('id, token, status, envios, erro_envio, pode_corrigir, revisao, correcao_liberada_em, enviado_em, aberto_em, respondido_em, prazo_entrega_dias, condicao_pagamento, frete, observacao, destino_empresa_id, fornecedor:fornecedores(id, nome, contato, email, whatsapp)')
+        .eq('cotacao_id', id)
+        .order('created_at'),
+      buscarResultados(id),
+    ])
     setConvites(data || [])
-    setResultados(await buscarResultados(id))
+    setResultados(res)
   }, [id])
 
   const carregar = useCallback(async () => {
-    const { data: c, error } = await supabase
-      .from('cotacoes')
-      .select('*, cotacao_itens(*)')
-      .eq('id', id)
-      .maybeSingle()
+    // cotação + convites + resultados ao mesmo tempo (antes eram 3 idas seguidas ao servidor)
+    const [{ data: c, error }] = await Promise.all([
+      supabase.from('cotacoes').select('*, cotacao_itens(*)').eq('id', id).maybeSingle(),
+      carregarConvites(),
+    ])
     if (error || !c) { setErro('Cotação não encontrada.'); setCarregando(false); return }
     setCotacao(c)
     setItens((c.cotacao_itens || []).sort((a, b) => a.ordem - b.ordem))
-    await carregarConvites()
     setCarregando(false)
   }, [id, carregarConvites])
 

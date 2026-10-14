@@ -191,4 +191,56 @@ grant execute on function cotacompara.propostas_recebidas()     to authenticated
 grant execute on function cotacompara.aprender_catalogo(jsonb)  to authenticated;
 grant execute on function cotacompara.registrar_envio_orcamento(uuid) to authenticated;
 
+-- ---------------------------------------------------------------------
+-- 5. Desempenho: políticas de segurança (RLS) calculando "minha empresa"
+--    UMA vez por consulta (e não uma vez por linha) — recomendação do Supabase.
+--    Mesmas regras de antes, só mais rápidas.
+-- ---------------------------------------------------------------------
+drop policy if exists empresas_dono on cotacompara.empresas;
+create policy empresas_dono on cotacompara.empresas for all to authenticated
+  using (owner_id = (select auth.uid())) with check (owner_id = (select auth.uid()));
+
+drop policy if exists fornecedores_empresa on cotacompara.fornecedores;
+create policy fornecedores_empresa on cotacompara.fornecedores for all to authenticated
+  using (empresa_id = (select cotacompara.minha_empresa_id()))
+  with check (empresa_id = (select cotacompara.minha_empresa_id()));
+
+drop policy if exists cotacoes_empresa on cotacompara.cotacoes;
+create policy cotacoes_empresa on cotacompara.cotacoes for all to authenticated
+  using (empresa_id = (select cotacompara.minha_empresa_id()))
+  with check (empresa_id = (select cotacompara.minha_empresa_id()));
+
+drop policy if exists itens_empresa on cotacompara.cotacao_itens;
+create policy itens_empresa on cotacompara.cotacao_itens for all to authenticated
+  using (cotacao_id in (select c.id from cotacompara.cotacoes c where c.empresa_id = (select cotacompara.minha_empresa_id())))
+  with check (cotacao_id in (select c.id from cotacompara.cotacoes c where c.empresa_id = (select cotacompara.minha_empresa_id())));
+
+drop policy if exists convites_empresa on cotacompara.convites;
+create policy convites_empresa on cotacompara.convites for all to authenticated
+  using (cotacao_id in (select c.id from cotacompara.cotacoes c where c.empresa_id = (select cotacompara.minha_empresa_id())))
+  with check (cotacao_id in (select c.id from cotacompara.cotacoes c where c.empresa_id = (select cotacompara.minha_empresa_id())));
+
+drop policy if exists respostas_leitura on cotacompara.respostas_itens;
+create policy respostas_leitura on cotacompara.respostas_itens for select to authenticated
+  using (convite_id in (select v.id from cotacompara.convites v join cotacompara.cotacoes c on c.id = v.cotacao_id
+                        where c.empresa_id = (select cotacompara.minha_empresa_id())));
+
+drop policy if exists orcamentos_empresa on cotacompara.orcamentos;
+create policy orcamentos_empresa on cotacompara.orcamentos for all to authenticated
+  using (empresa_id = (select cotacompara.minha_empresa_id()))
+  with check (empresa_id = (select cotacompara.minha_empresa_id()));
+
+drop policy if exists orc_itens_empresa on cotacompara.orcamento_itens;
+create policy orc_itens_empresa on cotacompara.orcamento_itens for all to authenticated
+  using (orcamento_id in (select o.id from cotacompara.orcamentos o where o.empresa_id = (select cotacompara.minha_empresa_id())))
+  with check (orcamento_id in (select o.id from cotacompara.orcamentos o where o.empresa_id = (select cotacompara.minha_empresa_id())));
+
+drop policy if exists catalogo_empresa on cotacompara.catalogo_produtos;
+create policy catalogo_empresa on cotacompara.catalogo_produtos for all to authenticated
+  using (empresa_id = (select cotacompara.minha_empresa_id()))
+  with check (empresa_id = (select cotacompara.minha_empresa_id()));
+
+create index if not exists idx_cc_convites_status on cotacompara.convites(status);
+create index if not exists idx_cc_cotacoes_empresa_status on cotacompara.cotacoes(empresa_id, status, created_at desc);
+
 notify pgrst, 'reload schema';

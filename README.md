@@ -141,6 +141,9 @@ torna `suporte@amp.ia.br` administrador — troque o e-mail se precisar.
   em **Propostas recebidas** (abre a página do orçamento, onde ele aprova).
 - O fornecedor vê só "Respondido / Encerrada" — o resultado (quem venceu) não é mostrado.
 - A resposta pelo painel também ensina o catálogo (próximo pedido já vem com o preço).
+- **Desempenho:** as regras de segurança (RLS) passam a calcular "minha empresa" uma vez por consulta;
+  o detalhe da cotação busca cotação, fornecedores e preços ao mesmo tempo (antes eram idas seguidas ao
+  servidor); telas pouco usadas (impressão, admin, orçamento, página do fornecedor) só carregam quando abertas.
 
 ## 1. Supabase (projeto compartilhado "Fixos")
 
